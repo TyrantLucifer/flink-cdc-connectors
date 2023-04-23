@@ -28,6 +28,7 @@ under the License.
     <packaging>jar</packaging>
 
     <dependencies>
+
         <!-- Debezium dependencies -->
         <dependency>
             <groupId>com.ververica</groupId>

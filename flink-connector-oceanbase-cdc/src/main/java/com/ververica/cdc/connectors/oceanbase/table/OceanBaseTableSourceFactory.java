@@ -24,6 +24,8 @@ import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
+import com.ververica.cdc.connectors.base.utils.OptionUtils;
+
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
@@ -186,6 +188,27 @@ public class OceanBaseTableSourceFactory implements DynamicTableSourceFactory {
         String rsList = config.get(RS_LIST);
         String configUrl = config.get(CONFIG_URL);
         String workingMode = config.get(WORKING_MODE);
+
+        OptionUtils.printOptions(
+                config,
+                SCAN_STARTUP_MODE,
+                USERNAME,
+                PASSWORD,
+                TENANT_NAME,
+                DATABASE_NAME,
+                TABLE_NAME,
+                TABLE_LIST,
+                SERVER_TIME_ZONE,
+                CONNECT_TIMEOUT,
+                HOSTNAME,
+                PORT,
+                LOG_PROXY_HOST,
+                LOG_PROXY_PORT,
+                LOG_PROXY_CLIENT_ID,
+                SCAN_STARTUP_TIMESTAMP,
+                RS_LIST,
+                CONFIG_URL,
+                WORKING_MODE);
 
         return new OceanBaseTableSource(
                 physicalSchema,

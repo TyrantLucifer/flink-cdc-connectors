@@ -24,6 +24,7 @@ import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
+import com.ververica.cdc.connectors.base.utils.OptionUtils;
 import com.ververica.cdc.connectors.mysql.source.config.MySqlSourceOptions;
 import com.ververica.cdc.connectors.mysql.source.config.ServerIdRange;
 import com.ververica.cdc.connectors.mysql.source.offset.BinlogOffset;
@@ -121,6 +122,36 @@ public class MySqlTableSourceFactory implements DynamicTableSourceFactory {
             validateDistributionFactorUpper(distributionFactorUpper);
             validateDistributionFactorLower(distributionFactorLower);
         }
+
+        OptionUtils.printOptions(
+                config,
+                HOSTNAME,
+                PORT,
+                USERNAME,
+                PASSWORD,
+                DATABASE_NAME,
+                TABLE_NAME,
+                SERVER_TIME_ZONE,
+                SERVER_ID,
+                SCAN_INCREMENTAL_SNAPSHOT_ENABLED,
+                SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE,
+                SCAN_SNAPSHOT_FETCH_SIZE,
+                CONNECT_TIMEOUT,
+                CONNECTION_POOL_SIZE,
+                CONNECT_MAX_RETRIES,
+                SCAN_STARTUP_MODE,
+                SCAN_STARTUP_SPECIFIC_OFFSET_FILE,
+                SCAN_STARTUP_SPECIFIC_OFFSET_POS,
+                SCAN_STARTUP_SPECIFIC_OFFSET_GTID_SET,
+                SCAN_STARTUP_SPECIFIC_OFFSET_SKIP_EVENTS,
+                SCAN_STARTUP_SPECIFIC_OFFSET_SKIP_ROWS,
+                SCAN_STARTUP_TIMESTAMP_MILLIS,
+                HEARTBEAT_INTERVAL,
+                CHUNK_META_GROUP_SIZE,
+                CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_UPPER_BOUND,
+                CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_LOWER_BOUND,
+                SCAN_NEWLY_ADDED_TABLE_ENABLED,
+                SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN);
 
         return new MySqlTableSource(
                 physicalSchema,

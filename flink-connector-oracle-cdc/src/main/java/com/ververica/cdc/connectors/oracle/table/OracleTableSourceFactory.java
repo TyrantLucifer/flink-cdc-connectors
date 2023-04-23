@@ -25,6 +25,7 @@ import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
 import com.ververica.cdc.connectors.base.options.StartupOptions;
+import com.ververica.cdc.connectors.base.utils.OptionUtils;
 import com.ververica.cdc.debezium.table.DebeziumOptions;
 
 import java.time.Duration;
@@ -38,6 +39,7 @@ import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.DATABA
 import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.HOSTNAME;
 import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.PASSWORD;
 import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN;
+import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.SERVER_ID;
 import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.SERVER_TIME_ZONE;
 import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.TABLE_NAME;
 import static com.ververica.cdc.connectors.base.options.JdbcSourceOptions.USERNAME;
@@ -100,6 +102,23 @@ public class OracleTableSourceFactory implements DynamicTableSourceFactory {
             validateDistributionFactorUpper(distributionFactorUpper);
             validateDistributionFactorLower(distributionFactorLower);
         }
+
+        OptionUtils.printOptions(
+                config,
+                HOSTNAME,
+                USERNAME,
+                PASSWORD,
+                DATABASE_NAME,
+                SCHEMA_NAME,
+                TABLE_NAME,
+                SERVER_TIME_ZONE,
+                SERVER_ID,
+                CONNECT_TIMEOUT,
+                CONNECTION_POOL_SIZE,
+                CONNECT_MAX_RETRIES,
+                SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN,
+                URL,
+                PORT);
 
         return new OracleTableSource(
                 physicalSchema,

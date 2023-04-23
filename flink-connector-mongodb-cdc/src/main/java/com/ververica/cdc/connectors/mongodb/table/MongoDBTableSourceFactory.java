@@ -25,6 +25,8 @@ import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
+import com.ververica.cdc.connectors.base.utils.OptionUtils;
+
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
@@ -95,6 +97,23 @@ public class MongoDBTableSourceFactory implements DynamicTableSourceFactory {
                 getPhysicalSchema(context.getCatalogTable().getResolvedSchema());
         checkArgument(physicalSchema.getPrimaryKey().isPresent(), "Primary key must be present");
         checkPrimaryKey(physicalSchema.getPrimaryKey().get(), "Primary key must be _id field");
+
+        OptionUtils.printOptions(
+                config,
+                HOSTS,
+                USERNAME,
+                PASSWORD,
+                DATABASE,
+                COLLECTION,
+                CONNECTION_OPTIONS,
+                COPY_EXISTING,
+                COPY_EXISTING_QUEUE_SIZE,
+                BATCH_SIZE,
+                POLL_MAX_BATCH_SIZE,
+                POLL_AWAIT_TIME_MILLIS,
+                HEARTBEAT_INTERVAL_MILLIS,
+                SCAN_INCREMENTAL_SNAPSHOT_ENABLED,
+                SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE_MB);
 
         return new MongoDBTableSource(
                 physicalSchema,

@@ -25,6 +25,8 @@ import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
+import com.ververica.cdc.connectors.db2.utils.OptionUtils;
+
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
@@ -112,6 +114,18 @@ public class Db2TableSourceFactory implements DynamicTableSourceFactory {
         ZoneId serverTimeZone = ZoneId.of(config.get(SERVER_TIME_ZONE));
         ResolvedSchema physicalSchema = context.getCatalogTable().getResolvedSchema();
         StartupOptions startupOptions = getStartupOptions(config);
+
+        OptionUtils.printOptions(
+                config,
+                HOSTNAME,
+                PORT,
+                USERNAME,
+                PASSWORD,
+                DATABASE_NAME,
+                SCHEMA_NAME,
+                TABLE_NAME,
+                SERVER_TIME_ZONE,
+                SCAN_STARTUP_MODE);
 
         return new Db2TableSource(
                 physicalSchema,

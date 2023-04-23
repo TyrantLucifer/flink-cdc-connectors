@@ -25,6 +25,8 @@ import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
+import com.ververica.cdc.connectors.base.utils.OptionUtils;
+
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
@@ -114,6 +116,18 @@ public class SqlServerTableFactory implements DynamicTableSourceFactory {
         StartupOptions startupOptions = getStartupOptions(config);
         ResolvedSchema physicalSchema =
                 getPhysicalSchema(context.getCatalogTable().getResolvedSchema());
+
+        OptionUtils.printOptions(
+                config,
+                HOSTNAME,
+                PORT,
+                USERNAME,
+                PASSWORD,
+                DATABASE_NAME,
+                SCHEMA_NAME,
+                TABLE_NAME,
+                SERVER_TIME_ZONE,
+                SCAN_STARTUP_MODE);
 
         return new SqlServerTableSource(
                 physicalSchema,

@@ -24,6 +24,8 @@ import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
+import com.ververica.cdc.connectors.base.utils.OptionUtils;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -56,6 +58,17 @@ public class TiDBTableSourceFactory implements DynamicTableSourceFactory {
         StartupOptions startupOptions = getStartupOptions(config);
         ResolvedSchema physicalSchema =
                 getPhysicalSchema(context.getCatalogTable().getResolvedSchema());
+
+        OptionUtils.printOptions(
+                config,
+                DATABASE_NAME,
+                TABLE_NAME,
+                SCAN_STARTUP_MODE,
+                PD_ADDRESSES,
+                TIKV_GRPC_TIMEOUT,
+                TIKV_GRPC_SCAN_TIMEOUT,
+                TIKV_BATCH_GET_CONCURRENCY,
+                TIKV_BATCH_SCAN_CONCURRENCY);
 
         return new TiDBTableSource(
                 physicalSchema,
