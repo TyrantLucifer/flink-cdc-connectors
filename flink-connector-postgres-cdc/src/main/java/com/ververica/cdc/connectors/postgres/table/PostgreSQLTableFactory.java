@@ -28,6 +28,7 @@ import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 
 import com.ververica.cdc.connectors.base.options.JdbcSourceOptions;
+import com.ververica.cdc.connectors.base.options.StartupMode;
 import com.ververica.cdc.connectors.base.options.StartupOptions;
 import com.ververica.cdc.connectors.postgres.utils.OptionUtils;
 import com.ververica.cdc.debezium.table.DebeziumChangelogMode;
@@ -37,28 +38,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.ververica.cdc.connectors.base.utils.ObjectUtils.doubleCompare;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.CHANGELOG_MODE;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.CHUNK_META_GROUP_SIZE;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.CONNECTION_POOL_SIZE;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.CONNECT_MAX_RETRIES;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.CONNECT_TIMEOUT;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.DATABASE_NAME;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.DECODING_PLUGIN_NAME;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.HEARTBEAT_INTERVAL;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.HOSTNAME;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.PASSWORD;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.PORT;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_ENABLED;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SCAN_SNAPSHOT_FETCH_SIZE;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SCAN_STARTUP_MODE;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SCHEMA_NAME;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SLOT_NAME;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SPLIT_KEY_EVEN_DISTRIBUTION_FACTOR_LOWER_BOUND;
 import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.SPLIT_KEY_EVEN_DISTRIBUTION_FACTOR_UPPER_BOUND;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.TABLE_NAME;
-import static com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions.USERNAME;
 import static com.ververica.cdc.debezium.table.DebeziumOptions.DEBEZIUM_OPTIONS_PREFIX;
 import static com.ververica.cdc.debezium.table.DebeziumOptions.getDebeziumProperties;
 import static com.ververica.cdc.debezium.utils.ResolvedSchemaUtils.getPhysicalSchema;
@@ -141,6 +131,17 @@ public class PostgreSQLTableFactory implements DynamicTableSourceFactory {
                                     + "\"all\": Encodes changes as retract stream using all RowKinds. This is the default mode.\n"
                                     + "\"upsert\": Encodes changes as upsert stream that describes idempotent updates on a key. It can be used for tables with primary keys when replica identity FULL is not an option.");
 
+    public static final ConfigOption<Boolean> SCAN_INCREMENTAL_SNAPSHOT_ENABLED =
+            ConfigOptions.key("scan.incremental.snapshot.enabled")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription(
+                            "Incremental snapshot is a new mechanism to read snapshot of a table. "
+                                    + "Compared to the old snapshot mechanism, the incremental snapshot has many advantages, including:\n"
+                                    + "(1) source can be parallel during snapshot reading, \n"
+                                    + "(2) source can perform checkpoints in the chunk granularity during snapshot reading, \n"
+                                    + "(3) source doesn't need to acquire global read lock (FLUSH TABLES WITH READ LOCK) before snapshot reading.");
+
     @Override
     public DynamicTableSource createDynamicTableSource(DynamicTableFactory.Context context) {
         final FactoryUtil.TableFactoryHelper helper =
@@ -187,6 +188,10 @@ public class PostgreSQLTableFactory implements DynamicTableSourceFactory {
             validateIntegerOption(JdbcSourceOptions.CONNECT_MAX_RETRIES, connectMaxRetries, 0);
             validateDistributionFactorUpper(distributionFactorUpper);
             validateDistributionFactorLower(distributionFactorLower);
+        } else {
+            checkState(
+                    !StartupMode.LATEST_OFFSET.equals(startupOptions.startupMode),
+                    "The option 'scan.startup.mode' must not be 'latest-offset' when 'scan.incremental.snapshot.enabled' is not enabled.");
         }
 
         OptionUtils.printOptions(IDENTIFIER, ((Configuration) config).toMap());

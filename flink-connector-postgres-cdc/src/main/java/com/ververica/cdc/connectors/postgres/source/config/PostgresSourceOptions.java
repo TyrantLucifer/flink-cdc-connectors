@@ -21,45 +21,11 @@ import org.apache.flink.configuration.ConfigOptions;
 
 import com.ververica.cdc.connectors.base.options.JdbcSourceOptions;
 import com.ververica.cdc.connectors.postgres.source.PostgresSourceBuilder;
-import com.ververica.cdc.debezium.table.DebeziumChangelogMode;
 
 import java.time.Duration;
 
 /** Configurations for {@link PostgresSourceBuilder.PostgresIncrementalSource}. */
 public class PostgresSourceOptions extends JdbcSourceOptions {
-
-    public static final ConfigOption<Integer> PORT =
-            ConfigOptions.key("port")
-                    .intType()
-                    .defaultValue(5432)
-                    .withDescription("Integer port number of the PostgreSQL database server.");
-
-    public static final ConfigOption<String> DECODING_PLUGIN_NAME =
-            ConfigOptions.key("decoding.plugin.name")
-                    .stringType()
-                    .defaultValue("decoderbufs")
-                    .withDescription(
-                            "The name of the Postgres logical decoding plug-in installed on the server.\n"
-                                    + "Supported values are decoderbufs, wal2json, wal2json_rds, wal2json_streaming,\n"
-                                    + "wal2json_rds_streaming and pgoutput.");
-
-    public static final ConfigOption<String> SLOT_NAME =
-            ConfigOptions.key("slot.name")
-                    .stringType()
-                    .defaultValue("flink")
-                    .withDescription(
-                            "The name of the PostgreSQL logical decoding slot that was created for streaming changes "
-                                    + "from a particular plug-in for a particular database/schema. The server uses this slot "
-                                    + "to stream events to the connector that you are configuring. Default is \"flink\".");
-
-    public static final ConfigOption<DebeziumChangelogMode> CHANGELOG_MODE =
-            ConfigOptions.key("changelog-mode")
-                    .enumType(DebeziumChangelogMode.class)
-                    .defaultValue(DebeziumChangelogMode.ALL)
-                    .withDescription(
-                            "The changelog mode used for encoding streaming changes.\n"
-                                    + "\"all\": Encodes changes as retract stream using all RowKinds. This is the default mode.\n"
-                                    + "\"upsert\": Encodes changes as upsert stream that describes idempotent updates on a key. It can be used for tables with primary keys when replica identity FULL is not an option.");
 
     public static final ConfigOption<Duration> HEARTBEAT_INTERVAL =
             ConfigOptions.key("heartbeat.interval.ms")
