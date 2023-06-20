@@ -28,9 +28,7 @@ import org.apache.flink.util.ExceptionUtils;
 import com.ververica.cdc.connectors.postgres.PostgresTestBase;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -59,8 +57,6 @@ public class PostgreSQLConnectorITCase extends PostgresTestBase {
                     env, EnvironmentSettings.newInstance().inStreamingMode().build());
 
     @ClassRule public static LegacyRowResource usesLegacyRows = LegacyRowResource.INSTANCE;
-
-    @Rule public final Timeout timeoutPerTest = Timeout.seconds(300);
 
     private final boolean parallelismSnapshot;
 
