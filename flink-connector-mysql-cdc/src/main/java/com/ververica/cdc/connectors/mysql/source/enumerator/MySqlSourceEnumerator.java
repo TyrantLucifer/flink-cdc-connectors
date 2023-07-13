@@ -64,12 +64,20 @@ public class MySqlSourceEnumerator implements SplitEnumerator<MySqlSplit, Pendin
     private static final Logger LOG = LoggerFactory.getLogger(MySqlSourceEnumerator.class);
     private static final long CHECK_EVENT_INTERVAL = 30_000L;
 
+    /** 分片器上下文 */
     private final SplitEnumeratorContext<MySqlSplit> context;
+
+    /** 配置 */
     private final MySqlSourceConfig sourceConfig;
+
+    /** 分片分配器 */
     private final MySqlSplitAssigner splitAssigner;
 
     // using TreeSet to prefer assigning binlog split to task-0 for easier debug
+    /** 申请分片的Reader列表 */
     private final TreeSet<Integer> readersAwaitingSplit;
+
+    /** binlog分片的元数据信息 */
     private List<List<FinishedSnapshotSplitInfo>> binlogSplitMeta;
 
     public MySqlSourceEnumerator(
@@ -84,8 +92,11 @@ public class MySqlSourceEnumerator implements SplitEnumerator<MySqlSplit, Pendin
 
     @Override
     public void start() {
+        // 开启分片分配器
         splitAssigner.open();
+        // 是否要更新binlog分片
         requestBinlogSplitUpdateIfNeed();
+        // 周期性调度
         this.context.callAsync(
                 this::getRegisteredReader,
                 this::syncWithReaders,

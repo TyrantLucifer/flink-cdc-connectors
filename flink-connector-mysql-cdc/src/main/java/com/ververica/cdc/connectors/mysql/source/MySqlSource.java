@@ -98,7 +98,10 @@ public class MySqlSource<T>
 
     private static final String ENUMERATOR_SERVER_NAME = "mysql_source_split_enumerator";
 
+    /** MySQL CDC Source 配置工厂类，用于为每个并行度生成对应的配置 */
     private final MySqlSourceConfigFactory configFactory;
+
+    /** 序列化类，用于将Debezium的数据序列化成指定格式T并发往下游算子 */
     private final DebeziumDeserializationSchema<T> deserializationSchema;
 
     /**
@@ -127,15 +130,21 @@ public class MySqlSource<T>
         return Boundedness.CONTINUOUS_UNBOUNDED;
     }
 
+    /** 为每个并行度创建Reader */
     @Override
     public SourceReader<T, MySqlSplit> createReader(SourceReaderContext readerContext)
             throws Exception {
         // create source config for the given subtask (e.g. unique server id)
+
+        // 使用当前并行度的id创建对应的配置
         MySqlSourceConfig sourceConfig =
                 configFactory.createConfig(readerContext.getIndexOfSubtask());
+
+        // 创建当前并行度共享的数据队列
         FutureCompletingBlockingQueue<RecordsWithSplitIds<SourceRecords>> elementsQueue =
                 new FutureCompletingBlockingQueue<>();
 
+        // 初始化Source Reader metric用于上报指标
         final Method metricGroupMethod = readerContext.getClass().getMethod("metricGroup");
         metricGroupMethod.setAccessible(true);
         final MetricGroup metricGroup = (MetricGroup) metricGroupMethod.invoke(readerContext);
@@ -143,14 +152,20 @@ public class MySqlSource<T>
         final MySqlSourceReaderMetrics sourceReaderMetrics =
                 new MySqlSourceReaderMetrics(metricGroup);
         sourceReaderMetrics.registerMetrics();
+
+        // 包装SourceReaderContext到自定义的上下文中，这个类主要用于SourceReader和SplitReader之间的通信
         MySqlSourceReaderContext mySqlSourceReaderContext =
                 new MySqlSourceReaderContext(readerContext);
+
+        // 创建SplitReader
         Supplier<MySqlSplitReader> splitReaderSupplier =
                 () ->
                         new MySqlSplitReader(
                                 sourceConfig,
                                 readerContext.getIndexOfSubtask(),
                                 mySqlSourceReaderContext);
+
+        // 创建Reader
         return new MySqlSourceReader<>(
                 elementsQueue,
                 splitReaderSupplier,
@@ -163,18 +178,25 @@ public class MySqlSource<T>
                 sourceConfig);
     }
 
+    /** 创建分片器，全局唯一，存在于Coordinator中 */
     @Override
     public SplitEnumerator<MySqlSplit, PendingSplitsState> createEnumerator(
             SplitEnumeratorContext<MySqlSplit> enumContext) {
+
+        // 为分片器创建配置
         MySqlSourceConfig sourceConfig = configFactory.createConfig(0, ENUMERATOR_SERVER_NAME);
 
+        // 校验配置
         final MySqlValidator validator = new MySqlValidator(sourceConfig);
         validator.validate();
 
+        // 新建分片分配器
         final MySqlSplitAssigner splitAssigner;
         if (sourceConfig.getStartupOptions().startupMode == StartupMode.INITIAL) {
+            // 全量+增量模式
             try (JdbcConnection jdbc = openJdbcConnection(sourceConfig)) {
                 boolean isTableIdCaseSensitive = DebeziumUtils.isTableIdCaseSensitive(jdbc);
+                // 生成混合分片分配器
                 splitAssigner =
                         new MySqlHybridSplitAssigner(
                                 sourceConfig,
@@ -186,9 +208,10 @@ public class MySqlSource<T>
                         "Failed to discover captured tables for enumerator", e);
             }
         } else {
+            // 增量模式，生成binlog分片器
             splitAssigner = new MySqlBinlogSplitAssigner(sourceConfig);
         }
-
+        // 创建分片器
         return new MySqlSourceEnumerator(enumContext, sourceConfig, splitAssigner);
     }
 

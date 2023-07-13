@@ -50,10 +50,13 @@ public class MySqlHybridSplitAssigner implements MySqlSplitAssigner {
     private static final Logger LOG = LoggerFactory.getLogger(MySqlHybridSplitAssigner.class);
     private static final String BINLOG_SPLIT_ID = "binlog-split";
 
+    /** Split元数据组的大小 */
     private final int splitMetaGroupSize;
 
+    /** 当前的binlog分片是否已经分配标志 */
     private boolean isBinlogSplitAssigned;
 
+    /** 全量分片分配器 */
     private final MySqlSnapshotSplitAssigner snapshotSplitAssigner;
 
     public MySqlHybridSplitAssigner(
@@ -90,6 +93,7 @@ public class MySqlHybridSplitAssigner implements MySqlSplitAssigner {
 
     @Override
     public void open() {
+        // 开始创建分片
         snapshotSplitAssigner.open();
     }
 
